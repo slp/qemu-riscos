@@ -339,6 +339,13 @@ static int tlbimvaa_write(CPUARMState *env, const ARMCPRegInfo *ri,
     return 0;
 }
 
+static int vbar_write(CPUARMState *env, const ARMCPRegInfo *ri,
+                      uint64_t value)
+{
+    env->cp15.c12_vbar = value & ~0x1Ful;
+    return 0;
+}
+
 static const ARMCPRegInfo cp_reginfo[] = {
     /* DBGDIDR: just RAZ. In particular this means the "debug architecture
      * version" bits will read as a reserved value, which should cause
@@ -448,6 +455,10 @@ static const ARMCPRegInfo v6_cp_reginfo[] = {
     { .name = "CPACR", .cp = 15, .crn = 1, .crm = 0, .opc1 = 0, .opc2 = 2,
       .access = PL1_RW, .fieldoffset = offsetof(CPUARMState, cp15.c1_coproc),
       .resetvalue = 0, .writefn = cpacr_write },
+    { .name = "VBAR", .cp = 15, .crn = 12, .crm = 0, .opc1 = 0, .opc2 = 0,
+      .access = PL1_RW, .writefn = vbar_write,
+      .fieldoffset = offsetof(CPUARMState, cp15.c12_vbar),
+      .resetvalue = 0 },
     REGINFO_SENTINEL
 };
 
@@ -540,13 +551,6 @@ static int pmintenclr_write(CPUARMState *env, const ARMCPRegInfo *ri,
 {
     value &= (1 << 31);
     env->cp15.c9_pminten &= ~value;
-    return 0;
-}
-
-static int vbar_write(CPUARMState *env, const ARMCPRegInfo *ri,
-                      uint64_t value)
-{
-    env->cp15.c12_vbar = value & ~0x1Ful;
     return 0;
 }
 

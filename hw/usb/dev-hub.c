@@ -359,6 +359,7 @@ static void usb_hub_handle_control(USBDevice *dev, USBPacket *p,
             case PORT_SUSPEND:
                 port->wPortStatus |= PORT_STAT_SUSPEND;
                 break;
+            case PORT_POWER:
             case PORT_RESET:
                 if (dev && dev->attached) {
                     usb_device_reset(dev);
@@ -367,8 +368,6 @@ static void usb_hub_handle_control(USBDevice *dev, USBPacket *p,
                     port->wPortStatus |= PORT_STAT_ENABLE;
                     usb_wakeup(s->intr, 0);
                 }
-                break;
-            case PORT_POWER:
                 break;
             default:
                 goto fail;

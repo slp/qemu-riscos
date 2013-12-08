@@ -468,6 +468,11 @@ static void usb_hid_handle_control(USBDevice *dev, USBPacket *p,
             goto fail;
         }
         break;
+    case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
+        if (value == 0 && index != 0x81) { /* clear ep halt */
+            goto fail;
+        }
+        break;
     case GET_REPORT:
         if (hs->kind == HID_MOUSE || hs->kind == HID_TABLET) {
             p->actual_length = hid_pointer_poll(hs, data, length);
@@ -490,9 +495,6 @@ static void usb_hid_handle_control(USBDevice *dev, USBPacket *p,
         p->actual_length = 1;
         break;
     case SET_PROTOCOL:
-        if (hs->kind != HID_KEYBOARD && hs->kind != HID_MOUSE) {
-            goto fail;
-        }
         hs->protocol = value;
         break;
     case GET_IDLE:

@@ -255,6 +255,7 @@ void hid_pointer_activate(HIDState *hs)
 int hid_pointer_poll(HIDState *hs, uint8_t *buf, int len)
 {
     int dx, dy, dz, b, l;
+    int fx, fy;
     int index;
     HIDPointerEvent *e;
 
@@ -318,20 +319,23 @@ int hid_pointer_poll(HIDState *hs, uint8_t *buf, int len)
         break;
 
     case HID_TABLET:
+        /* This is a hack to have an usable pointer on RISCOS. */
+        fx = ((dx * 1920) / 32767) * 2;
+        fy = (1080 - (dy * 1080) / 32767) * 2;
         if (len > l) {
             buf[l++] = b;
         }
         if (len > l) {
-            buf[l++] = dx & 0xff;
+            buf[l++] = fx & 0xff;
         }
         if (len > l) {
-            buf[l++] = dx >> 8;
+            buf[l++] = fx >> 8;
         }
         if (len > l) {
-            buf[l++] = dy & 0xff;
+            buf[l++] = fy & 0xff;
         }
         if (len > l) {
-            buf[l++] = dy >> 8;
+            buf[l++] = fy >> 8;
         }
         if (len > l) {
             buf[l++] = dz;

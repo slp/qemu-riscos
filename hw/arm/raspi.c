@@ -134,12 +134,14 @@ static void raspi_init(QEMUMachineInitArgs *args)
     }
 
     /* (Yet) unmapped I/O registers */
-    dev = sysbus_create_simple("bcm2835_todo", BCM2708_PERI_BASE, NULL);
+    /* Modified by Yeqing change address to GPIO_BASE */
+    dev = sysbus_create_simple("bcm2835_todo", GPIO_BASE, NULL);
     s = SYS_BUS_DEVICE(dev);
     mr = sysbus_mmio_get_region(s, 0);
     memory_region_init_alias(per_todo_bus, NULL, NULL, mr,
         0, memory_region_size(mr));
-    memory_region_add_subregion(sysmem, BUS_ADDR(BCM2708_PERI_BASE),
+    /* Modified by Yeqing change address to GPIO_BASE */
+    memory_region_add_subregion(sysmem, BUS_ADDR(GPIO_BASE),
         per_todo_bus);
 
     /* Interrupt Controller */

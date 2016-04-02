@@ -28,23 +28,25 @@
 
 typedef struct bcm2835_usb_state_struct bcm2835_usb_state;
 
+/* USB Host channel */
 typedef struct {
     bcm2835_usb_state *parent;
     int index;
 
-    uint32_t hcchar;
-    uint32_t hcsplt;
-    uint32_t hcint;
-    uint32_t hcintmsk;
-    uint32_t hctsiz;
-    uint32_t hcdma;
-    uint32_t reserved;
-    uint32_t hcdmab;
+    uint32_t hcchar;    // Host Channel Characteristic
+    uint32_t hcsplt;    // Split Control
+    uint32_t hcint;     // Interrupt
+    uint32_t hcintmsk;  // Interrupt Mask
+    uint32_t hctsiz;    // Transfer Size (Bits 0-18: TransferSize, 19-28: PacketCount, 29-30: PacketId, 31: DoPing)
+    uint32_t hcdma;     // DMA address
+    uint32_t reserved;  
+    uint32_t hcdmab;    
 
     USBPacket packet;
     uint8_t buffer[8192];
 } bcm2835_usb_hc_state;
 
+/* USB global registers structure */
 struct bcm2835_usb_state_struct {
     SysBusDevice busdev;
     MemoryRegion iomem;
@@ -144,8 +146,10 @@ static void channel_enable(bcm2835_usb_hc_state *c)
     uint32_t epnum = (c->hcchar >> hcchar_epnum_shift) & hcchar_epnum_mask;
     uint32_t devaddr = (c->hcchar >> hcchar_devaddr_shift)
                        & hcchar_devaddr_mask;
+    /* Get transfer size */
     uint32_t xfersize = (c->hctsiz >> hctsiz_xfersize_shift)
                         & hctsiz_xfersize_mask;
+    /* Get Packet Id */
     uint32_t pid = (c->hctsiz >> hctsiz_pid_shift) & hctsiz_pid_mask;
     uint32_t dma_addr = c->hcdma; /* ??? */
     int actual_length;
@@ -235,13 +239,17 @@ static uint32_t bcm2835_usb_hchan_read(bcm2835_usb_state *s, int ch,
         res = 0;
         break;
     }
+    /* Add by yeqing for test */
+    printf("[QEMU] TOS USB hchan READ: offset(%x) result(%x)\n", offset, res);
     return res;
 }
 static void bcm2835_usb_hchan_write(bcm2835_usb_state *s, int ch,
     int offset, uint32_t value, int *pset_irq)
 {
+    /* Get packet count */
+    uint32_t packet_count;
+    
     bcm2835_usb_hc_state *c = &s->hchan[ch];
-
     switch (offset) {
     case 0x0:
         c->hcchar = value;
@@ -265,10 +273,19 @@ static void bcm2835_usb_hchan_write(bcm2835_usb_state *s, int ch,
         c->hcintmsk = value;
         break;
     case 0x10:
+        //fprintf(stderr, "Transfer size change to value %x\n", value);
         c->hctsiz = value;
         break;
     case 0x14:
+        /* Decrease packet count after write to dma address */
         c->hcdma = value;
+        packet_count = (c->hctsiz >> hctsiz_pktcnt_shift) & hctsiz_pktcnt_mask;
+        if (packet_count > 0) {
+            packet_count -= 1;
+        }
+        /* Store packet count back */
+        c->hctsiz &= ~(hctsiz_pktcnt_mask << hctsiz_pktcnt_shift);
+        c->hctsiz |= packet_count << hctsiz_pktcnt_shift;
         break;
     case 0x1c:
         c->hcdmab = value;
@@ -281,6 +298,9 @@ static void bcm2835_usb_hchan_write(bcm2835_usb_state *s, int ch,
 static uint64_t bcm2835_usb_read(void *opaque, hwaddr offset,
     unsigned size)
 {
+    /* Add by yeqing for test */
+    printf("[QEMU] TOS USB READ: offset(%x)\n", (int)offset);
+
     bcm2835_usb_state *s = (bcm2835_usb_state *)opaque;
     uint32_t res = 0;
     int i;

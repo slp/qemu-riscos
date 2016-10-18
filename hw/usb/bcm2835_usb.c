@@ -240,7 +240,7 @@ static uint32_t bcm2835_usb_hchan_read(bcm2835_usb_state *s, int ch,
         break;
     }
     /* Add by yeqing for test */
-    printf("[QEMU] TOS USB hchan READ: offset(%x) result(%x)\n", offset, res);
+    // printf("[QEMU] TOS USB hchan READ: offset(%x) result(%x)\n", offset, res);
     return res;
 }
 static void bcm2835_usb_hchan_write(bcm2835_usb_state *s, int ch,
@@ -299,7 +299,7 @@ static uint64_t bcm2835_usb_read(void *opaque, hwaddr offset,
     unsigned size)
 {
     /* Add by yeqing for test */
-    printf("[QEMU] TOS USB READ: offset(%x)\n", (int)offset);
+    // printf("[QEMU] TOS USB READ: offset(%x)\n", (int)offset);
 
     bcm2835_usb_state *s = (bcm2835_usb_state *)opaque;
     uint32_t res = 0;

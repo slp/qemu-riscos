@@ -14,7 +14,7 @@
 #include "hw/usb/desc.h"
 #include "sysemu/char.h"
 
-//#define DEBUG_Serial
+// #define DEBUG_Serial
 
 #ifdef DEBUG_Serial
 #define DPRINTF(fmt, ...) \
@@ -337,6 +337,10 @@ static void usb_serial_handle_control(USBDevice *dev, USBPacket *p,
     case DeviceInVendor | FTDI_GET_LATENCY:
         data[0] = s->latency;
         p->actual_length = 1;
+        break;
+    /* Added for TOS train, 0x2120 is SET_LINE_REQUST for usb-serial adapter 
+     * chip, ignore this usb request */
+    case 0x2120:
         break;
     default:
     fail:
